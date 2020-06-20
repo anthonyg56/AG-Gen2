@@ -1,0 +1,262 @@
+---
+author: 'Anthony Gayflor'
+title: 'Authentication Without a Custom Server - Next.Js, TypeScript, MongoDB'
+slug: 'serverless-setup'
+subTitle: 'Setting up the Dev Enviornment'
+date: 2020-05-10
+category: 'Web Development'
+type: 'Tutorial'
+tags: [
+  'Next.JS',
+  'TypeScript',
+  'MongoDB',
+  'Tutorial',
+  'Serverless',
+  'Authentication',
+  'Express.Js',
+  'React.Js',
+  'Series'
+]
+stack: [
+  'Next.Js'
+  'TypeScript',
+  'MongoDB'
+]
+series: true
+length: 5
+index: 1
+---
+
+import Layout from '../../src/components/layout/layout.tsx'
+
+export const payload = {
+  title: "Part One: Setting up the Dev Enviornment"
+}
+
+export default ({ children }) => <Layout payload={payload} background='./images/backgrounds/projects.jpeg'>{ children }</Layout>
+
+# Authentication in Next.js without a custom server
+
+*By Anthony Gayflor, Last Updated on Satuday, April 27th, 2020*
+
+![Blog post header banner](https://images.unsplash.com/photo-1544847558-3ccacb31ee7f?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1650&q=80)
+*Banner Photo by Sean Lim on [**Unsplash**](https://images.unsplash.com/photo-1544847558-3ccacb31ee7f?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1650&q=80)*
+
+## **Part 1: Setting up the Development Setup**
+### **Table of Content**:
+
+1. [What is Next.Js?](##What-is-next.Js?)
+2. [Why I use Next.Js](##Why-I-use-Next.Js)
+3. [Creating a Re-Usable Template](##Creating-a-Re-Usable-Template)
+4. [Installing Next.js](##Installing-Next.JS)
+5. [Installing TypeScript](##Installing-TypeScript)
+6. [Installing MongoDB](##Installing-MongoDb)
+
+## **What is Next.Js?**
+
+React on its own is amazing at handling all the rendering of a website, but it can get tricky when trying to build one thats scalable. Luckily, [NextJs](https://nextjs.org/) provides all the utilities React needs to be even more of a powerhouse than it already is.
+
+NextJs is a powerful web framework built on top of React to help produce high preforming server-side rendered web sites and applications. Zeit, now [Vercel](https://vercel.com/), created NextJs in 2017 as a way to bring a better development experince to web developers who want to build highly scaleable react apps. What separates Next from other site generators like Nuxt, Gatsby, And Sapper is that Next is completely unopinionated about how app are built in Next.
+
+Rather developers get some neat utilities included on install, and have the choice to decide how the infrastructure will look like.
+
+### **Utilities Included ⚡️**
+
+- Skip adding a custom server with NextJs 9 [API routes](https://nextjs.org/docs/api-routes/introduction)
+- Serverless deployments and Serverless Functions
+- NextJs communicates [Isomorphically](https://www.lullabot.com/articles/what-is-an-isomorphic-application)bto  run on both the client and server
+- HTML pages are be pre-rendered server-side
+- NextJs supports static-site generation (ssg) to host for free static web sites on CDNs like Vercel and Netlify
+
+## **Why I use Next.Js**
+
+Next supports an approach that caught my attention and has gotten me interested in trying out backend opperations on a deepler level. It's offers a JAMStack styled approach to developing by bringing the back-end closer to the front-end.
+
+Things like api route call handling is included upon install and lets developers skip configuring a custom server if they want to. This feature allows us to use Serverless functions when we deploy onto a CDN like vercel to handle back-end communication. 
+
+Developers can focus more on what it is their users are interacting with on the client side and less about writing or maintianing a server.
+
+
+![Login code for handling login in Next.Js 9 with Serverless functions](https://res.cloudinary.com/anthonygayflor/image/upload/v1588846591/Screen_Shot_2020-05-07_at_6.16.18_AM_gd2yp0.png)
+
+This is by far my favorite framework that I've worked with.
+
+Next.js has helped innovate the way I create web sites and applications, and I'm more than happy to say it. It provides a postive developer experince & includes useful utilities on install that we do on our own, but would be tedious to set up.
+
+## **Creating a Re-Usable Template**
+
+![Gif of Homepage](https://res.cloudinary.com/anthonygayflor/video/upload/v1588171836/Screen_Recording_2020-04-29_at_9.36.54_AM_gzs1nl.gif)
+
+I was able to build my first template using NextJs, TypeScript, & MongoDB that lets users log into to their homepage and register for an account without a custom server.
+
+Users account are stored in MongoDB, and access to protected routes require JWT authentication. When the browser makes a requests, access tokens are sent in the header of a request and are only granted if the refresh tokens is vaid. 
+
+Learning how to apply this approach was difficult at first because the concept was very complex to understand. Alot of the resources available were difficult to follow and had a mix in of tools i wanted to avoid to keep the structure simple and clean. That why I want to help contribute what I was able to learn and share it with others that are interested in building web sites and applications with out a server in NextJs. 
+
+In a 5 post series, I'll be recreating the template I made as a tutorial & highlighting the key parts of Next that help bring the back-end experience of developing server-side rendered React projects closer to the front-end.
+
+### **Series Outline 📝** ###
+- Part 1: Setting up the Development Enviorment
+
+- [Part 2](https://anthonygayflor.netlify.com): Client-Side Routing in Next.Js
+
+- [Part 3](https://anthonygayflor.netlify.com): Connecting to MongoDB
+
+- [Part 4](https://anthonygayflor.netlify.com): Creating Api Routes for Logging in & Registering
+
+- [Part 5](https://anthonygayflor.netlify.com): JWT Authentication using Access & Refresh Tokens
+
+
+## **Overview & Github Repository**
+
+There's going to be alot of information provided so I broke everything down into a 5 parts series that highlights specifc key aspects of the template. To get the most out of this tutorial, I would suggest following along and trying out some of the methods I talk about in your own projects.
+
+If this is youre first time working with Nextjs, all you’ll need is prior React knowledge and an average to above average understanding of JavaScript. Developing in Next is extremly similar to the unopinionated nature of create-react-app, so it'll feel right at home.
+
+For the ones who just want the code, here's the [Github repo](https://github.com/anthonyg56/NextJs-Typescript-Serverless-Template). As for the ones still here with me lets jump into it 👍🏾 For the first part were going to install all the packages we will be needing to set up our development enviorment.
+
+## **Installing NextJS**
+
+![NextJs Banner](https://pbs.twimg.com/media/Cvn-H3tWAAAhsyS.jpg)
+
+### **How to get Started**
+Installing NextJs is quick, easy, and as simple as creating a react project. To get started, open a console at the root of the folder you use to store all your projects, inside the console type and run:
+
+> $ npx create-next-app my-app
+
+Replace `my-app` with the name of the folder you want yours to be. This command will initalize the process of installing NextJs as dependency into your project under the name of the folder you typed. If you plan on using NextJs alot, you can also run
+
+> $ npm i -g create-next-app
+
+to install `create-next-app` globally onto your computer. This command will allow you to create a Next project by just typing `create-next-app my-app` and it will be a lot more quicker.
+
+After that you're done! We've added NextJs into our project, super easy right?
+
+There is a very interactive tutorial on Next home page located on [here](https://nextjs.org/learn/basics/create-nextjs-app) that is short and interactive enough to help you get an indepth look of what NextJs is about and up to speed if you're interested! I suggest taking the time to walk through the tutorial because it'll be easier to follow along with me and understand the topics i cover better.
+
+## **Installing TypeScript**
+
+![TypeScript Banner](https://pantheon.io/sites/default/files/field/image/TypeScriptImage.jpeg)
+
+### **Why Typescript**
+
+[TypeScript](https://www.typescriptlang.org/) is a super set of javascript and is extremely useful for large and complex projects. I like to think of it as an insurance plan for our code that we create and sign the contract ourselves.
+
+It helps us by getting rid of potentially buggy code during development & ensuring that our code executes exactly as we planned before runtime. Another utility is that for some code editors like VS Code, TypeScript improves productivity by providing type definition of tools we're using and save us time from having to go look it up repeatedly 🙂
+
+### **Adding TypeScript to NextJS**
+Adding TypeScript into NextJs is extremely simple, open a console at the home directory of your project and type:
+
+> $ touch tsconfig.json
+
+This will create the tsconfig file needed for TypeScript. Next in the console at the root directory still, execute `npm run dev` and Next will recognize the `tsconfig.json` file you just added. Afterwards you'll be met with some instructions on how to install the needed dependencies and asked restart the server with `npm run dev`.
+
+Now we are able to include ts & tsx files to replace the js & jsx ones. 
+
+### **Configuring TypeScript**
+
+First, We need to configuring `tsconfig` so that TypeScript will cooperate nicely with React and Next. I like to use this tsconfig setup in my react projects, copy and past this into `tsconfig.json`:
+
+```json
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "alwaysStrict": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "lib": [
+      "dom",
+      "es2017"
+    ],
+    "module": "esnext",
+    "moduleResolution": "node",
+    "noEmit": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "esnext"  },
+    "exclude": [
+      "node_modules"
+    ],
+    "include": [
+      "**/*.ts",
+      "**/*.tsx"
+    ]
+}
+```
+
+After that were all set to move on to installing MongoDB.
+
+## **Installing [MongoDB](https://www.mongodb.com/)**
+
+![MongoDB Banner](https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwebassets.mongodb.com%2F_com_assets%2Fcms%2Fmongodb-for-giant-ideas-bbab5c3cf8.png&f=1&nofb=1)
+
+### **What is MongoDB?**
+MongoDB is a kind of new [*Non-Relational/NoSql*](https://www.mongodb.com/nosql-explained) database released in 2009 that uses a BSON (Binar JSON) format to read, write, and edit data instead of the traditional way like NoSQL. It's extremely beneficial for projects that require high horizontal scalability, but we won't dive into mongoDb right now, we just need a MongoDB Atlas account.
+
+MongoDb Atlas will give us a cloud database sanbox that we will be able to connect our app with to play around, test, and store data in.
+
+### **Creating a MongoDB Atlas Account**
+
+To sign up for a MongoDB Atlas account, vist the home page [here](https://www.mongodb.com/cloud/atlas) and click the Try for Free button in the top right corner. 
+
+![MongoDB Homepage](https://res.cloudinary.com/anthonygayflor/image/upload/v1588854215/Screen_Shot_2020-05-07_at_8.22.51_AM_smwyor.png)
+
+You'll be asked to enter user information to create an account. Afterwards you'll be greeted with 3 options for a cluster plan to use with MongoDB. Go ahead and choose the free option, thats all were going to need for this tutorial.
+
+Once selecting a cluster plan, go ahead and continue on to the next step with the recommended configuratings of your Cloud Provider & Region. With that all done, your account with MongoDb Atlas is now made and you should be met with this screen.
+
+![MongoDB Cluster Dashboard](https://res.cloudinary.com/anthonygayflor/image/upload/v1588854630/Screen_Shot_2020-05-07_at_8.30.03_AM_zzeacu.png)
+
+### **Adding an Admin Account for MongoDB Alas**
+
+Thats great we have an account, but in order to gain access to our Database, we need to create a account within our database that has admin rights to read and write data. On the left of the Atlas dashboard page, look under the green Security heading and click Database Access. Go ahead and add a database account with Admin priviledges as shown below.
+
+![Add a new MongoDB Admin](https://res.cloudinary.com/anthonygayflor/image/upload/v1588855900/Screen_Shot_2020-05-07_at_8.51.19_AM_ppo6ld.png)
+
+### **Connecting to the App**
+We're almost done with setting up our database enviorment. In order to connect the cluster to our app, we need to save the mongo uri key as an enviorment variable. This will be stored in a seperate .env file that helps protect any exposure of sensitive information during times where code is being shared, for example on an open source platform like Github. 
+
+To get the uri key, open MongoDB atlas and under the green header 'Data Storage', click Clusters and then click Connect in the middle left of the screen. You'll be asked to add your IP address to a whitelist of addresses that is allowed access to connect to your cluster.
+
+### **Add the Uri Key to our App**
+After you're IP is added, continue and choose the 'Connect Your App' connection method so you cab get the URI key. Now you should be greeted with a screen like this:
+
+![mongodb connection options](https://res.cloudinary.com/anthonygayflor/image/upload/v1588857284/Screen_Shot_2020-05-07_at_9.14.32_AM_qsraf4.png)
+
+Under 'Connection String Only', copy the entire connection string and open up the root directory of our project in your text editor. Create a new file called `.env` at the root, and on the first line add `MONGO_URI=` then paste the connection string you just coppied directly after. It should look something like this:
+
+> MONGO_URI=mongodb+srv://YourUserName:YourPassword@cluster0-dbe3i.mongodb.net/test?retryWrites=true&w=majority
+
+All we need to do now is replace 'YourUserName' and 'YourPassword' with the matching credentials of the DB admin you created. 
+
+### **Configuring NextJs Config**
+
+To access these enviroment valriables in NextJs, open up `next.config.js` located at the root of the project and paste this code into the file replacing whats already there.
+
+```javascript
+require('dotenv').config()
+const webpack = require('webpack')
+
+module.exports = {
+  webpack: (config) => {
+    config.plugins.push(
+      new webpack.EnvironmentPlugin(process.env)
+    )
+    return config
+  }
+}
+```
+
+If there isnt a Next.config.js file, just create a new one and Next will recognize it. This will allow our enviorment variables to be accessed without our Next project. After youre done with that, install mongoose with `npm i mongoose' and its types with `npm i -d @types/mongoose` and our development enviorment is now setup. 
+
+## **Wrapping up**
+
+With all the inital packages & enviorments installed, we're ready to start coding. We can now move onto creating the page components & give users a UI to navigate creating or logging into their accounts. I'll be covering creating pages and client-side routing with NextJs in part 2 of the the series [here](https://www.anthonygayflor.com).
+
+Until then, thank you for your time and I'll see you in the *next* post 😄

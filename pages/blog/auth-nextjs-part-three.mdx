@@ -1,0 +1,225 @@
+# How to Handle Api Calls Without a Server - Next.js, TypeScript, and MongoDB
+
+*By Anthony Gayflor, Last Updated on Satuday, April 27th, 2020*
+![*Banner Photo by Sean Lim on Unsplash*](https://images.unsplash.com/photo-1550645612-83f5d594b671?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1650&q=80)
+
+## **Part 3: Connecting to MongoDB**
+
+#### Table of Content:
+1. [Introduction](##Introductions)
+2. [A Quick Look at Mongoose](##A-Quick-Look-at-Mongoose)
+3. [Getting Started](##Getting-Started)
+4. [Creating the DB Connection](##Creating-the-DB-Connection)
+5. [Creating The User Model](##Creating-The-User-Schema)
+6. [Hashing User Passwords](##Hashing-User-Passwords)
+7. [Wrapping it Up](##Wrapping-it-Up)
+
+## **Introduction**
+
+Hello and welcome to my blog! This post is part 3 out of 5 in a series where I cover how to use Next.Js, MongoDB, and TypeScript together all with out a server.
+
+Today in part 3, I'm going to be demonstrating how an npm module called [Mongoose](https://mongoosejs.com/) can build a connection instance for NextJs serverless functions. The connection instance is re-useable & maps out to a single Mongo database. This was tricky at first because it required a more simplistic approach than what im used to with Express.
+
+## **A Quick Look at Mongoose**
+
+![*Banner for Mongoose*](https://cdn-images-1.medium.com/fit/t/1600/480/1*iDvsmUwzZQxJSKdL0xzwIA.png)
+
+I introduced MongoDB Atlas in [part one](https://www.anthonygayflor.com) and gave a brief overview about what it is and how were using it in the template. To put it shortly, MongoDB is a NoSql, aka non-relational, database that stores data in BSON format as documents. The issue is that when working with mongoDB outside the terminal, saving data can get tricky.
+
+Thats why we use Mongoose instead to help us out. Mongoose is a schema-based solution used to model application data after and save them as documents within MongoDB. Click [here](https://mongoosejs.com/docs/models.html) to learn more about Mongoose.
+
+## **Getting Started**
+
+If you're interested in the code here the [Github repo](https://github.com/anthonyg56/NextJs-Typescript-Serverless-Template) you can check out for your self.
+
+Before getting started on the code, let setup the project with files containing mainly code for Mongoose. We need to create 3 new files and 1 new folder. Inside of the root of the project directory, go ahead and add
+
+- A File called `iModels.ts` inside of `/interfaces`
+- A Folder at the root called `models`, and a new file inside of it called `user.schema.js`
+- Another File called `withDb.ts` inside of `/utils`
+
+Now install the two npm modules we will be needing, in your console add these two packages to your project
+
+> $ npm i mongoose bcrypt
+
+then run this command right after to install their type dependcencies.
+
+> $ npm i --save-dev @types/mongoose @types/bcrypt
+
+bcrypt is a library to help you hash passwords. To learn more, click [here](https://github.com/kelektiv/node.bcrypt.js) to view its repository and documentation.
+
+## **Connect to MongoDB without A Server**
+
+From personal experience, learning how to use Mongoose with out a Node.js framework like express was a big challange. At the time Im still transitioning from working primarilly on the front-end and starting to understand a Nuxt codebase Im building that uses Express & MongoDB. 
+
+Just when I thought that I had started to understand navigating the backend better, trying to learn how to use mongoose with out express & Nuxt boilerplates to guide me was a big reality check I'm still just figuring things out. 
+
+After alot of debugging and googling, I was able to grasp that Mongoose can create a reuseable connection instance & it maps to a single database in MongoDB. This means that when working with Mongoose inside of a serverless architecture, one connection instance can be imported into multiple serverless functions.
+
+### **Creating a Mongoose Connection 🐾**
+![Mongoose Connecting](https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2F66.media.tumblr.com%2Fae45cb8a7fb817ae9b00601d06373f78%2Ftumblr_oeunuubnKg1qfthy3o1_1280.jpg&f=1&nofb=1)
+
+Inside of `./utils/withDb.ts`, import these packages from mongoose
+
+```typescript
+import { createConnection, Connection, ConnectionOptions } from "mongoose"
+```
+
+**`createConnection(uri, options)`** is a asynchronous function that takes two arguments and returns a Promise with a Connection Instance. 
+
+For the first argument `uri` is the connection string needed to connect to MongoDB Atlas. Currently it issaved as an enviorment variable and to access it just refrence `process.env.MONGO_URI`. The second argument `options` is an object that contains optional properties to configure for the connection. 
+
+Copy and paste the rest of the code into `withDb.ts`
+
+```typescript
+let conn: any = null
+
+const MONGO_URI = process.env.MONGO_URI as string
+
+const DbOptions: ConnectionOptions = {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  useCreateIndex: true,
+  useFindAndModify: true
+}
+
+export const getConnection = async (): Promise<Connection> => {
+  if (conn === null) {
+    conn = await createConnection(MONGO_URI, DbOptions)
+  }
+  return conn
+}
+```
+
+In order to re-use the connection, `getConnection()` has to first check if there is a Connection that is being used already. If there is then that instance is returned, otherwise a new one is created and then returned. Nothing too difficult to understand.
+
+## **Creating the User Model**
+
+To create a document in MongoDB with mongoose, we first need to create schemas that are basically the blueprint of a model. A model is a fancy constructor that is defined by a schema and is used to create a instance of a MongoDB document. When ever we save a model, its gets stored as a document in MongoDb.
+
+If this is your first time using Mongoose, It's really similar to creating an object so it shouldn't be too difficult to grasp.
+
+### **Model Interfaces**
+
+We need to create a type interface that will be reused multiples times. Inside of `/interfaces`, create a new file called `iModels.ts`. This file is where all models type related code will be stored. Inside of iModels.ts copy and paste the following code.
+
+```typescript
+import { Document } from 'mongoose'
+
+export interface iUser extends Document {
+    name: string,
+    userName: string,
+    email: string,
+    password: string
+}
+```
+
+The iUser interface takes 4 properties that looks exactly like the inital state seen [part two](https://www.anthonygayflor.com) in the register form. Thats because when a user registers for an account, the data gets sent to be saved with a Model defined by Mongoose. Before the User model is used, TypeScript double checks that the data matches the iUser interface.
+
+### **Defining the Schema**
+
+In order to save a user into MongoDB, there needs to be a defined Mongoose Schema that is exported as a Model. To learn more about how to define a schema, check out the Mongoose [docs](https://mongoosejs.com/docs/guide.html). 
+
+Copy and paste the User Schema into `./models/user.schema.ts`
+
+```typescript
+import mongoose, { Model, Connection, Schema } from 'mongoose'
+import { iUser } from '../../interfaces/iModels'
+
+const schemaName = 'User'
+const UserSchema: Schema<iUser> = new Schema<iUser>({
+    name: {
+        type: String,
+        required: true
+    },
+    userName: {
+        type: String,
+        required: true,
+        index: {
+            unique: true
+        }
+    },
+    email: {
+        type: String,
+        required: true,
+        index: {
+            unique: true
+        }
+    },
+    password: {
+        type: String,
+        required: true
+    }
+})
+```
+
+First all packages containing instances and types definitions for the UserModel is imported, then two variables are defined. `schemaName` is just a string containing the name of the Schema & `UserSchema` represents an instance of the Schema class. UserSchema has 4 properties all of types string and are all required inorder for a new User Document to be created.
+
+Properties userName & email must be unique and require an index but thats not important at all right now. 
+
+The general outline of the user schema is now defined, but for extra security there needs to be a method for hashing user passwords.
+
+### **Hashing User Passwords**
+
+Before a new document is saved into MongoDB with the User Model, the password needs to be hashed and override the old one. To do this were going to run `bcrypt` at the *pre save* of saving a document because Mongoose allows defined pre save methods that act as a middle ware before executing saving a model. The pre save method is defined in the Mongoose schema before a model is created. 
+
+At the tops of `user.schema.ts`, below the two imports add these two lines of code.
+
+```typescript
+import bcrypt from 'bcrypt'
+
+const SALT_WORK_FACTOR = 10
+```
+
+We need to import bcrypt and use it to encrypt the User Schemas password on pre save, and use  `SALT_WORK_FACTOR` as the rounds defined to generate a salt. Copy the User Schema pre save function and paste it before UserSchema.
+
+```typescript
+UserSchema.pre<IUser>('save', function(next) {
+    const user = this
+
+    /* Only hash the password if it has been modified, or is new */
+    if (!user.isModified('password')) {
+      return next()
+    }
+  
+    /* Generate a salt */
+    bcrypt.genSalt(SALT_WORK_FACTOR, function(err, salt) {
+      if (err) {
+        return next(err)
+      }
+
+      /* Hash the password along with our new salt */
+      bcrypt.hash(user.password, salt, function(err, hash) {
+        if (err) {
+          return next(err)
+        }
+        /* override the cleartext password with the hashed one*/
+        user.password = hash
+
+        next()
+      })
+    })
+})
+```
+
+At pre-save, the User Model only hashes a password if its being modified otherwise next is returned and the save process continues. In order to hash a passsword, a salt is generate with `genSalt` that uses the `SALT_WORK_FACTOR` defined at the top, hashes the user password and saves creates a new password containing the has. After its all done, User Continues saving.
+
+### **UserSchema to UserModel**
+
+The UserSchema is now defined and can be exported as a Mongoose model. Copy and paste this code at the bottom of `user.schema.ts` and of course save all your hard work.
+
+```typescript
+const UserModel = (con: Connection): Model<IUser> => con.model<IUser>(schemaName, UserSchema)
+
+export default UserModel
+```
+
+Here we see that UserModel takes a Connection instance as an argument and returns a Model instance that is created on the Connection instance. I'm sure there will be a hook for it here soon enough.
+
+Ah, just joking.
+
+## **Wrapping it up**
+
+The database connection & document models are all set up and ready to be used within the application. In the part [four](https://anthonygayflor.comhttps://github.com/kelektiv/node.bcrypt.js), I'll introduce my favorite feature included an any framework, Next.Js 9 Api routes & show how to manage Route calling without a custom server. 
+
+Until then, once again, thank you for your time and ill catch you in the *next* part 😼

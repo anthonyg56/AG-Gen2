@@ -1,0 +1,563 @@
+# Handling Api Calls Without A Custom Server - Next.js, TypeScript, and MongoDB
+
+*By Anthony Gayflor, Last Updated on Satuday, April 27th, 2020*
+![*Banner Photo by Sean Lim on Unsplash*](https://images.unsplash.com/photo-1550645612-83f5d594b671?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1650&q=80)
+
+## **Part 2: Client-Side Routing using Next.js**
+
+### **Table of Content**:
+
+1. [A Quick Recap](##A-Quick-Recap)
+2. [Client-Side Routing in Next.Js](##Client-Side-Routing-in-Next.Js)
+3. [Creating The Home Page](##Creating-The-Home-Page)
+4. [Creating The Register Page](##Creating-The-Register-Page)
+5. [Creating The Login Page](##Creating-The-Login-Page)
+6. [Wrapping Up](##Wrapping-Up)
+
+
+## **A Quick Recap & Overview**
+
+This post is part two out of 5 in a series where I’ll be covering how to handle API route calls in Next.Js without a custom server.
+
+In [Part one](https://www.anthonygayflor.com), I covered how to set up the development environment, demonstrated how to install NextJs and TypeScript, and showed how to add a MongoDB Atlas cloud database to our app with a connection string.
+
+In this post, we’re going to understand how Client-Side Routing works in Next.Js by building page components for Home, Login, Register. As well as creating the form functions that handle submitting users account data to MongoDB on the front-end.
+
+As a disclaimer, I want to address that the focus of this tutorial is on the functionality of the application, not the css. Im sorry the design will be hideous for the eyes, but hopefully a useful insight into its execution will make up for it 😸
+
+## **Client-Side Routing in Next.Js**
+
+There are 3 ways to handle client-side Routing in Next.Js. 
+
+- Pages
+- Links
+- Routers
+
+Let’s starts with pages first since the other two are used within the scope of a page.
+
+![File structure at the start of a create-next-app initalization](https://res.cloudinary.com/anthonygayflor/image/upload/v1588917204/Screen_Shot_2020-05-08_at_1.52.41_AM_hpp4je.png)
+
+### **Routing with Pages**
+
+At the root of the project is the file structure in NextJs, and there is a very small amount of items there. The only folder Next technically needs to get started outside of `node_modules` is `./pages`. This is because the url that matches a page on display is directly correlated to the file it’s saved under inside of pages.
+
+The base url for say a website like mine, anthonygayflor.com, would consist of only the only index.js file inside of the root of `/pages`. To add sub-urls just create a file with the name of the slug for your page inside of `/pages`. 
+
+> */pages/about.js* or */pages/about/index.js* would be anthonygayflor.com/about in the url bar.
+
+To add dynamic routes and pages, just add a bracket wrapped about the route parameters and Next will recognize that the pages is to be rendered as a dynamic one. For example, when ever a page request is made to `/pages/[blogPostId]` , `blogPostId` will be passed in as a parameter by the `<Link />` element. The url will render out as either anthonygayflor.com/blogPostId=hello-world or anthonygayflor.com/hello-world.
+
+This feels right at home like when we all started learning web development and made web pages by adding different files and folders. Except with a modern day twist.
+
+### **Linking to Different Pages**
+
+In order to be able to link to different pages within our application, we would use the Link component to route to a different pages on the client side.
+
+The way we would use the Link component from 'next/link' to take us home is by setting the link attribute `href` equal to the address '/home'.
+
+```Javascript
+
+<Link href='/home'>
+  <a>Home</a>
+</Link>
+
+```
+
+In order to link to a dynamic page like `/[profilename]` we would use:
+
+```javascript
+
+<Link href='/[profileName]' as='example-name'>
+  <a>Home</a>
+</Link>
+
+```
+
+It’s like like using an '<a/>' tag with some added attributes. To learn more about how Links work in Next, and all the different options you can pass it click [here](https://nextjs.org/docs/api-reference/next/link).
+
+### **Interacting with the Router**
+
+We can still interact with the router of our app by improrting a Router instance from the [next/router](https://nextjs.org/docs/api-reference/next/router) package included with Next.
+
+To access Router inside of any functional component use the [useRouter()](https://nextjs.org/docs/api-reference/next/router#userouter) or [withRouter](https://nextjs.org/docs/api-reference/next/router#withrouter) React hooks provided by next/router. Inside the links to the hooks are examples of how they are used. 
+
+We’re going to create an example of how to handle client side Routing in Next by creating the home page of the template.
+
+## **Creating the Home Page**
+
+![*Home Page*](https://res.cloudinary.com/anthonygayflor/image/upload/v1588924743/Screen_Shot_2020-04-26_at_2.01.09_AM_qfcqmo.png)
+
+In order to create the Home page, we’re going to use the index file we already have in `./pages/index.js`.
+
+Go ahead and rename `index.js` to `index.tsx`, then replace everything _inside_ of the `<main> `element with this code:
+
+```html
+<Link href="/login">Log in</Link>
+<Link href="/register">Sign Up</Link>
+<h1>Hello world</h1>
+```
+
+import the `<Link>` component & NextPage type at the top.
+
+```javascript
+import { NextPage } from 'next'
+import Link from 'next/link'
+```
+
+When we run npm run dev, our webpage should look like the picture of the homepage at the top.
+
+But that’s it, our homepage is finished! Only problem is our `<Link>` component wont take us anywhere until we create the pages it needs. Lets get started with the registration page
+
+## Registration Page
+
+![*Register Page*](https://res.cloudinary.com/anthonygayflor/image/upload/v1588924743/Screen_Shot_2020-04-26_at_2.01.09_AM_qfcqmo.png)
+
+### **Registration Form Type Definition**
+
+We need to make typescript happy and create the registration form interfaces and custom types. Create a new folder inside of your root project called `interfaces` and create a file called `iForms.ts`. 
+
+Copy and past the following code into our new file.
+
+```typescript
+import React from 'react'
+
+/* Interfaces of Different Forms */
+export type RegisterForm = {
+  name?: string,
+  userName?: string,
+  email?: string,
+  password?: string
+}
+
+/* Type Definitions of Different Form Functions */
+export type HandleSubmit = (body: React.FormEvent<HTMLFormElement>) => Promise<void>
+export type HandleInput = (e: React.ChangeEvent<HTMLInputElement>) => void
+
+```
+
+**RegistrationForm** accepts 4 string values and is our custom type that defines the structure & data types for our registration forms data:
+
+ - name
+ - userName
+ - email
+ - password
+
+**IHandleSubmit** is a type definition that takes a React *form event* as an argument and returns a void promise
+
+**IHandleInput** is a type definition that takes a React *form input event* as an argument and returns a void promise
+
+We’re all ready to move onto the next stages of making the registration page.
+
+## **Installing NPM Packages**
+
+Lastly before writing the registration page code, we're going to install `isomorphic-unfetch`.
+
+This package will help Next.Js to fetch data on the client side of the application by communicating isomorphically. To learn more about how it works check out the documentation in the [GitHub repo](https://github.com/developit/unfetch).
+
+To install, open a console at the root of your project folder and run:
+
+> $ npm i isomorphic-unfetch. 
+
+## **Making the Registration Page**
+
+Create a new file called `register.tsx` inside of `./pages`, then copy and paste the code below inside of the new file.
+
+```jsx
+import React, { useState } from "react"
+import { NextPage } from "next"
+import Head from "next/head"
+import { useRouter } from "next/router"
+import { IHandleSubmit, IHandleInput, RegisterForm } from '../../interfaces/forms'
+import BaseUrl from '../../utils/baseUrl'
+
+const initalState = {
+    email: '',
+    password: '',
+    userName: '',
+    name: ''
+}
+
+const RegisterPage: NextPage = () => {
+    const [errorMsg, setErrorMsg] = useState<string>("")
+    const [userInfo, setUserInfo] = useState<RegisterForm>(initalState)
+
+    const router = useRouter()
+
+    return (
+        <>
+            <Head>
+                <title>Register</title>
+            </Head>
+
+            <main>
+                <div className="register-page">
+                    <form className="register-form form" onSubmit={handleSubmit}>
+                        {errorMsg ? <p style={{ color: "red" }}>{errorMsg}</p> : null}
+                        <div className="register-input-label">
+                            <label htmlFor="name">
+                                Name
+                                <input 
+                                    type="text"
+                                    name="name"
+                                    id="name"
+                                    value={userInfo.name}
+                                    onChange={handleNameInput}
+                                    required
+                                />
+                            </label>
+                        </div>
+                        <div className="register-input-label">
+                            <label htmlFor="userName">
+                                User Name
+                                <input 
+                                    type="text"
+                                    name="userName"
+                                    id="userName"
+                                    value={userInfo.userName}
+                                    onChange={handleUserNameInput}
+                                    required
+                                />
+                            </label>
+                        </div>
+                        <div className="register-input-label">
+                            <label htmlFor="email">
+                                Email Adress
+                                <input
+                                    type="email"
+                                    name="email"
+                                    id="email"
+                                    value={userInfo.email}
+                                    onChange={handleEmailInput}
+                                    required
+                                />
+                            </label>
+                        </div>
+                        <div className="register-input-label">
+                            <label htmlFor="password">
+                                Password
+                                <input
+                                    type="password"
+                                    name="password"
+                                    id="password"
+                                    value={userInfo.password}
+                                    onChange={handlePasswordInput}
+                                    required
+                                />
+                            </label>
+                        </div>
+                        <button type="submit">Create Account</button>
+                    </form>
+                </div>
+            </main>
+
+            <footer>
+
+            </footer>
+        </>
+    )
+}
+
+export default RegisterPage
+```
+
+Theres a lot going on in this so let's take a second to fully understand whats happening.  The key point I want to focus on & provide a basic outline of the register component and it’s functionality. It does 4 things:
+
+- Keeps track of changes made to the input and saves the input
+- Submits the form in a POST request
+- Redirects to /login or display an error message upon an error from the request
+
+### **Tracking & Saving Changes to Input**
+
+In the HTML theres a form with 4 input elements that capture the keystrokes entered by users. Right now, I want to pay attention to the *value* and *onChange* attributes of input:
+
+```html
+<div className="register-input-label">
+  <label htmlFor="name">
+    Name
+    <input
+      type="text"
+      name="name"
+      id="name"
+      value={userInfo.name} <--
+      onChange={handleNameInput} <--
+      required
+    />
+  </label>
+```
+
+ - **value**: Ths attribute that points to the variable where the input value is stored.
+ - **onChange**: Another attribute that points to the *function* that handles changes made in the input by users
+
+ These attributes are essential to capturing the data being entered by the user. All 4 value attributes points to properties inside of the initalState userInfo object that contains properties from the inital state.
+ 
+```javascript
+const initalState = {
+  email: '',
+  password: '',
+  userName: '',
+  name: ''
+}
+```
+
+### **Handling Input Events**
+
+When users type inside the input fields, we track the key strokes with the handleInput functions. These functions will make use the setUserInfo functions to mutate the state & save the values inside of userInfo.
+
+```javascript
+/* Tracks input & saves the changes in userInfo */
+const handleEmailInput: IHandleInput = (e) => {
+  e.preventDefault()
+  setUserInfo({ ...userInfo, email: e.target.value })
+}
+const handlePasswordInput: IHandleInput = (e) => {
+  e.preventDefault()
+  setUserInfo({ ...userInfo, password: e.target.value })
+}
+const handleUserNameInput: IHandleInput = (e) => {
+  e.preventDefault()
+  setUserInfo({ ...userInfo, userName: e.target.value })
+}
+const handleNameInput: IHandleInput = (e) => {
+  e.preventDefault()
+  setUserInfo({ ...userInfo, name: e.target.value })
+}
+```
+
+Im not too sure I know of a better way to do this, but i know there is one so if you have a method/answer as to how user input change can be tracked better, do share!
+
+### **Submitting Form Data**
+
+In order for users to register for an account, they need to be able to send their form data over to the server & save it into MongoDB. To do this, we assign the onSubmit attribute a variable that is a functions intended to handles submitted form data. 
+
+```javascript
+<form className="register-form form" onSubmit={handleSubmit}>
+```
+
+The `handleSubmit` functions will do 4 things
+
+```javascript
+
+const handleSubmit: IHandleSubmit = async (e) => {
+    /* 1. Prevent default event behavior */
+    e.preventDefault()
+
+    /* 2. Make a request to '/api/register/' */
+    const res = await fetch(`${BaseUrl}/api/register`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(userInfo)
+    })
+
+    /* 3. Check for errors  & set the error message state to the messeage returned by the server */
+    if(res.status === 500) {
+        setErrorMsg(res.statusText)
+        return
+    }
+
+    /* IF successful, push users to login page* */
+    router.push(`/login`)
+}
+```
+
+If there is an error we have the next line to display the error message.
+
+```javascript
+{ errorMsg ? <p style={{ color: "red" }}>{errorMsg}</p> : null }
+```
+
+Otherwise, we push users to the login page so they can login.
+
+## Login Page
+
+![*Login Page*](https://res.cloudinary.com/anthonygayflor/image/upload/v1588923316/Screen_Shot_2020-04-26_at_2.01.42_AM_mmewpq.png)
+
+The login page code will basically be the exact same thing as the register page except there will be a small amount of extra functionality for handling authentication and redirecting. 
+
+### **Login Form Type Definition**
+
+Before we create the page, we need to create a type definition for our login form. inside of `./interfaces/iForms.ts`, add the following code above the function types.
+
+```javascript
+export type LoginForm = {
+  email?: string;
+  password?: string;
+}
+```
+
+and thats it, we can create the login page.
+
+### **Making the Login Page**
+
+Inside of the pages directory create a new folder called login, and inside of `./pages/login` add a index.tsx file. You can also just create a login.tsx file and you will still get the same desired results.
+
+Copy and paste this code into your login page:
+
+```javascript
+import React, { useState, useEffect } from "react"
+import { NextPage } from "next"
+import Head from "next/head"
+import Link from "next/link"
+import { useRouter } from "next/router"
+import fetch from "isomorphic-unfetch"
+import { IHandleSubmit, IHandleInput, LoginForm } from '../../interfaces/forms'
+import { saveToken } from '../../utils/withAuth'
+import BaseUrl from '../../utils/baseUrl'
+
+const LoginFormInitalState = {
+  email: '',
+  password: ''
+}
+
+const LoginPage: NextPage = () => {
+  const router = useRouter()
+  const [userName, setUserName] = useState('')
+  const [errorMsg, setErrorMsg] = useState<string>('')
+  const [userInfo, setUserInfo] = useState<LoginForm>(LoginFormInitalState)
+  const [redirect, setRedirect] = useState(false)
+
+  const handleEmailInput: IHandleInput = (e) => {
+    e.preventDefault()
+    setUserInfo({ ...userInfo, email: e.target.value })
+  }
+  const handlePasswordInput: IHandleInput = (e) => {
+    e.preventDefault()
+    setUserInfo({ ...userInfo, password: e.target.value })
+  }
+
+  const handleSubmit: IHandleSubmit = async(e) => {
+    e.preventDefault()
+
+    const res = await fetch(`${BaseUrl}/api/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(userInfo)
+    })
+
+    // TODO: Add some error handling
+    if (res.status >= 400) {
+      setErrorMsg('There was an error')
+      return
+    }
+
+    const { user, refreshToken, accessToken } = await res.json()
+
+    saveToken(null, refreshToken, 'refresh')
+    saveToken(null, accessToken, 'access')
+  
+    setUserName(user.userName)
+    setRedirect(true)
+  }
+
+  // If redirect is true, redirect to users homepage
+  useEffect(() => {
+    if (redirect === true) router.push('/[userName]', `/${userName}`)
+  }, [redirect])
+
+  return (
+    <>
+      <Head>
+        <title>Login</title>
+      </Head>
+
+      <main>
+        <div className="login-form-container">
+          <form className="login-form form" onSubmit={handleSubmit}>
+            {errorMsg ? <p style={{ color: "red" }}>{errorMsg}</p> : null}
+            <div className="inputs-container">
+              <div className="email-input">
+                <label htmlFor="email">
+                  Email
+                  <input
+                    type="email"
+                    name="required"
+                    id="email"
+                    placeholder="eg example@gmail.com"
+                    value={userInfo.email}
+                    onChange={handleEmailInput}
+                    required
+                  />
+                </label>
+              </div>
+              <div className="password-input">
+                <label htmlFor="password">
+                  Password
+                  <input
+                    type="password"
+                    name="password"
+                    id="password"
+                    value={userInfo.password}
+                    onChange={handlePasswordInput}
+                    required
+                  />
+                </label>
+              </div>
+              <button type="submit">Login</button>
+            </div>
+          </form>
+          <div className="register">
+            <h3>
+              Register for an account <Link href="/register"><a>here</a></Link>
+            </h3>
+          </div>
+        </div>
+      </main>
+
+      <footer></footer>
+    </>
+  );
+};
+
+export default LoginPage;
+```
+
+Atleast its a lot shorter this time.
+
+### **Explaining the Code**
+
+The login page is very similar to the register page except for a few changes and smaller in size. 
+
+For the time being, just ignore anything in the code pertaining to tokens for now, I will be covering that in part 5. The app still needs to connect to the database and api routes to communicate through for tokens to work.
+
+####  Added States
+
+In the begining of the functional component, there have been more states added named userName & redirect.
+
+```javascript
+const [redirect, setRedirect] = useState(false)
+const [userName, setUserName] = useState('')
+```
+
+The redirect state is a boolean that a react hook called `useEffect()` watches for changes made & rerenders the entire page if there is any. If redirect is true, that means the user was able to login in sucessfully and is now being redirected. 
+
+The userName state is for storing the userName of a users accounts & is refrenced in useEffect() for routing purposes. When it changes, so does redirect & users are taken to their dashboard/homepage
+
+#### How It Happens
+
+These state changes happen at the end of `handleSubmit()`, where this time a post request is sent to `/api/login` to login in to an account. If the function executes without errors, we use setUserName to save the user name of the dashboard we redirect to, and setRedirect to true.
+
+```javascript
+setUserName(user.userName)
+setRedirect(true)
+```
+
+React will realize that redirects state has changed and will proceed to rerender the entire app.
+
+```javascript
+useEffect(() => {
+  if (redirect === true) router.push('/[userName]', `/${userName}`)
+}, [redirect])
+```
+
+To learn more about how useEffort works, check out the [guide](https://reactjs.org/docs/hooks-effect.html) on Reacts website.
+
+## **Wrapping Up**
+
+With the home, register, and login pages created; we now have all that is needed for our users to interact with the app through UI. 
+
+We now are ready to move onto parth 3 where I will will be covering how to connect to MongoDB with out a custom server & create the user Schema to save as a document within thhe database. Both part three and four content material will begin to move from working with front-end aspects of the template to back-end ones.
+
+Thank you for your time, have a blessed day & i'll see you *next* time in part [three](https://www.anthonygayflor.com) 😸
